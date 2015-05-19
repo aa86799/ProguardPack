@@ -1,0 +1,172 @@
+apply plugin: 'com.android.application'
+/*
+定义一个方法，仅def声明时，返回类型任意(自动判断)
+   可以将返回值直接写成String 或def String
+gradle支持groovy语言，groovy默认引入的包有：
+  java.io.* java.lang.* java.math.BigDecimal java.math.BigInteger
+  java.net.* java.util.* groovy.lang.* groovy.util.*
+ */
+def String computeVersionName() {
+    return "MyApplication-2.2"
+}
+
+/*
+Build Tasks:
+    General Tasks:
+        assemble
+        The task to assemble the output(s) of the project 用于输出build目录  输出的apk文件为buildType和productflavor的组合体
+            还可以使用 assembleBuildType,如$gradle assembleAabbcc 只执行这一个buildType的输出
+        check
+        The task to run all the checks.  运行检测，会执行test任务
+        build
+        This task does both assemble and check 包含assemble和check task
+        clean
+        This task cleans the output of the project 清除输出的build目录
+ */
+
+
+
+
+android {
+//    compileSdkVersion 22
+//    buildToolsVersion "22.0.1"
+    compileSdkVersion rootProject.ext.compileSdkVersion  //使用project>build.gradle定义的公共项
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/java'
+            }
+            resources {
+                srcDir 'src/resources'
+            }
+        }
+//        main.jniLibs {//注意DSL中，property可以用圆点，method可以用 {}
+//            srcDir('libs')
+//        } //所以可以写成  main {jniLibs{srcDir()}} 或 main.jniLibs.srcDir()
+//        main.jniLibs.srcDir('libs')
+        //若有多个目录  jniLibs.srcDirs=['libs', 'x86libs']
+
+    }
+
+    defaultConfig {
+        applicationId "com.stone.myapplication"
+        minSdkVersion 8
+        targetSdkVersion 22
+        //versionCode 是一个int值，区间为[0,99999] 一般用于判断app升级
+        versionCode 1
+        //versionName 是一个字符串，可以展示给用户
+        versionName computeVersionName() //使用外部定义的方法
+        /*
+        manifestPlaceholders 
+        	manifest中使用占位符，如：<... android:name="${YOUR_APP_KEY}" >
+        	以[key-value]形式替换：[YOUR_APP_KEY:"value"]
+        */
+        manifestPlaceholders = [YOUR_APP_KEY: "友盟后台的appkey"]
+
+
+
+    }
+    defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "友盟后台的appkey-hoho"]
+
+    signingConfigs { //gradle assembleRelease
+        /*
+           可以定义多个签名配置项，如下面的myConfig
+         */
+        myConfig {
+            storeFile file("stone.keystore")
+            storePassword "482935"   //修改成自己的签名文件store密码
+//			storePassword System.console().readLine("\nKeystore password: ")  //使用命令行gradle build 编译
+            keyAlias "stone"
+            keyPassword "482935"  //修改成自己的签名文件key密码
+//			keyPassword System.console().readLine("\nKey password: ") //使用命令行gradle build 编译
+        }
+    }
+
+    buildTypes {
+        /*
+            可以配置多个buildType项，如下面的release，debug，aabbcc
+         */
+        release {
+            applicationIdSuffix ".release"
+            versionNameSuffix ".正式版"
+            minifyEnabled true  //译：使变小enabled。   即启用混淆器
+            //混淆文件：sdk/tools/proguard/proguard-android.txt 和 当前module下的proguard-rules.pro
+//            proguardFiles  getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'
+            //getDefaultProguardFile('proguard-android.txt'),
+            //getDefaultProguardFile('proguard-android-optimize.txt'),
+            signingConfig signingConfigs.myConfig
+            zipAlignEnabled true    //混淆后的zip优化，默认为true，可不写。当不显示配置为true时，不会生成unaligned.apk
+        }
+        debug {
+            debuggable true  //启用debug的buildType配置
+            applicationIdSuffix ".debug"
+        }
+
+        aabbcc {//自定义配置，未配置签名项，所以会生成未签名apk
+            multiDexEnabled true
+            applicationIdSuffix ".aabbcc"
+        }
+    }
+    productFlavors {
+        /*
+          productFlavors-产品风格：
+          		即不同产品的配置，它会基于上面的公共配置项defaultConfig
+          		下面的配置项与buildTypes{}中的配置项，成类似sql中的全联(full join)关系
+          		 当执行 $gradle build   命令后，会生成：
+          		 	module-flavor1-release-unaligned.apk
+          		 	module-flavor1-release.apk
+          		 	module-flavor1-debug-unaligned.apk
+          		 	module-flavor1-debug.apk
+          		 	module-flavor1-aabbcc.apk
+          		 	...flavor2...apk
+
+          applicationId 用于标识 在谷歌Play商店上的唯一标识 默认不配置，则与app的AndroidManifest.xml中的package一致
+          		仅替换<manifest>中的package属性值，其它不受影响
+
+         */
+
+        flavor1 {
+            proguardFiles 'proguard-rules.pro'
+            applicationId "com.stone.myapplication.pro"
+            manifestPlaceholders = [channelID: "百度应用平台"]
+
+            testApplicationId "com.stone.myapplication.test"
+            testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        }
+
+        flavor2 {
+            proguardFiles 'proguard-rules.pro'
+            applicationId "com.stone.myapplication.free"
+            manifestPlaceholders = [channelID: "豌豆夹"]
+        }
+    }
+
+}
+repositories.flatDir {
+    dirs 'libs'
+}
+dependencies {
+    //	Local binary dependency  本地jar包
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //Gradle每次编译都会去检查库的更新，使用本地编译生成的库  android-lib项目生成的库文件为.arr文件
+    compile(name:'eventbuslib-release', ext:'aar')
+    // Module dependency 引用android-library项目
+//    compile project(':eventbuslib')
+    /*
+      Remote binary dependency  download to local   group:name:version 
+      配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
+     */
+    compile 'com.android.support:appcompat-v7:22.0.0'
+    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:cardview-v7:22.0.0'
+    compile 'com.android.support:recyclerview-v7:22.0.0'
+
+    //指定某产品，编译依赖的android-library 及 buildType
+    /*
+        flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
+        flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
+    */
+
+}

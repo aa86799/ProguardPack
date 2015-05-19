@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.stone.myapplication">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="UMENG_APPKEY"
+                android:value="${YOUR_APP_KEY}" />
+            <meta-data
+                android:name="channelName"
+                android:value="${channelID}" />
+        </activity>
+
+        <activity
+            android:name="com.stone.myapplication.RecyclerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_recycler"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name="com.stone.myapplication.CardActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="card"
+            android:theme="@style/FullscreenTheme" />
+    </application>
+
+</manifest>
