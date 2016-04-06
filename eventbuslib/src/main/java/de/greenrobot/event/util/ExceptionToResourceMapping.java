@@ -19,7 +19,7 @@ public class ExceptionToResourceMapping {
     public final Map<Class<? extends Throwable>, Integer> throwableToMsgIdMap;
 
     public ExceptionToResourceMapping() {
-        throwableToMsgIdMap = new HashMap<Class<? extends Throwable>, Integer>();
+        throwableToMsgIdMap = new HashMap<>();
     }
 
     /** Looks at the exception and its causes trying to find an ID. */

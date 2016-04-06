@@ -105,7 +105,7 @@ public class EventBusBuilder {
      */
     public EventBusBuilder skipMethodVerificationFor(Class<?> clazz) {
         if (skipMethodVerificationForClasses == null) {
-            skipMethodVerificationForClasses = new ArrayList<Class<?>>();
+            skipMethodVerificationForClasses = new ArrayList<>();
         }
         skipMethodVerificationForClasses.add(clazz);
         return this;

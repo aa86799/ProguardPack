@@ -118,10 +118,10 @@ public class MainActivity extends ActionBarActivity {
         System.out.println("onEventAsync:StoneEvent" + event.getCurrentEvent() + "," + event.getData());
         Looper.prepare();
         switch (event.getCurrentEvent()) {
-            case StoneEvent.EVENT_RecyclerBackToMain:
+            case StoneEvent.EVENT_RECYCLER_BACK_TO_MAIN:
                 Toast.makeText(this, "刚从Recycler页面回来", Toast.LENGTH_SHORT).show();
                 break;
-            case StoneEvent.EVENT_CardBackToMain:
+            case StoneEvent.EVENT_CARD_BACK_TO_MAIN:
                 Toast.makeText(this, "刚从Card页面回来", Toast.LENGTH_SHORT).show();
                 break;
         }

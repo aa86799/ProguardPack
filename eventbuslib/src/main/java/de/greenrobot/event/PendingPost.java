@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class PendingPost {
-    private final static List<PendingPost> pendingPostPool = new ArrayList<PendingPost>();
+    private final static List<PendingPost> pendingPostPool = new ArrayList<>();
 
     Object event;
     Subscription subscription;
