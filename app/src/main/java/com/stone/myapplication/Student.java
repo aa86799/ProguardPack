@@ -13,6 +13,20 @@ import java.io.Serializable;
 public class Student implements Serializable, Parcelable {
     private String name;
 
+    public static final Parcelable.Creator<Student> CREATOR = new Parcelable.Creator<Student>() {
+        public Student createFromParcel(Parcel source) {
+            return new Student(source);
+        }
+
+        public Student[] newArray(int size) {
+            return new Student[size];
+        }
+    };
+
+    private Student(Parcel in) {
+        this.name = in.readString();
+    }
+
     public Student(String name) {
         this.name = name;
     }
@@ -39,17 +53,4 @@ public class Student implements Serializable, Parcelable {
         dest.writeString(this.name);
     }
 
-    private Student(Parcel in) {
-        this.name = in.readString();
-    }
-
-    public static final Parcelable.Creator<Student> CREATOR = new Parcelable.Creator<Student>() {
-        public Student createFromParcel(Parcel source) {
-            return new Student(source);
-        }
-
-        public Student[] newArray(int size) {
-            return new Student[size];
-        }
-    };
 }

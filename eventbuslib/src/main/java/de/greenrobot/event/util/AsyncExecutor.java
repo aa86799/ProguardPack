@@ -31,6 +31,23 @@ import de.greenrobot.event.EventBus;
  */
 public class AsyncExecutor {
 
+    private final Executor threadPool;
+    private final Constructor<?> failureEventConstructor;
+    private final EventBus eventBus;
+    private final Object scope;
+
+    private AsyncExecutor(Executor threadPool, EventBus eventBus, Class<?> failureEventType, Object scope) {
+        this.threadPool = threadPool;
+        this.eventBus = eventBus;
+        this.scope = scope;
+        try {
+            failureEventConstructor = failureEventType.getConstructor(Throwable.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(
+                    "Failure event class must have a constructor with one parameter of type Throwable", e);
+        }
+    }
+
     public static class Builder {
         private Executor threadPool;
         private Class<?> failureEventType;
@@ -87,23 +104,6 @@ public class AsyncExecutor {
 
     public static AsyncExecutor create() {
         return new Builder().build();
-    }
-
-    private final Executor threadPool;
-    private final Constructor<?> failureEventConstructor;
-    private final EventBus eventBus;
-    private final Object scope;
-
-    private AsyncExecutor(Executor threadPool, EventBus eventBus, Class<?> failureEventType, Object scope) {
-        this.threadPool = threadPool;
-        this.eventBus = eventBus;
-        this.scope = scope;
-        try {
-            failureEventConstructor = failureEventType.getConstructor(Throwable.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(
-                    "Failure event class must have a constructor with one parameter of type Throwable", e);
-        }
     }
 
     /** Posts an failure event if the given {@link de.greenrobot.event.util.AsyncExecutor.RunnableEx} throws an Exception. */

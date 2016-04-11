@@ -6,6 +6,9 @@ package com.stone.myapplication.interfaces;
  * email  : aa86799@163.com
  */
 public class DD implements IPlay, ISport{
+    private String xxa;
+    private String xxb;
+
     @Override
     public void playBall() {
 
@@ -15,9 +18,6 @@ public class DD implements IPlay, ISport{
     public void swim() {
 
     }
-
-    private String xxa;
-    private String xxb;
 
     public void xox(String a) {
 

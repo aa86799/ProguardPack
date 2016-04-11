@@ -8,8 +8,8 @@ package com.stone.myapplication;
  * 自定义消息事件类型
  */
 public class StoneEvent {
-    public static final int EVENT_RecyclerBackToMain = 0x10;//从Recycler-acti 按Back键 退到 Main-acti
-    public static final int EVENT_CardBackToMain = 0x11;//从ard-acti 按Back键 退到 Main-acti
+    public static final int EVENT_RECYCLER_BACK_TO_MAIN = 0x10;//从Recycler-acti 按Back键 退到 Main-acti
+    public static final int EVENT_CARD_BACK_TO_MAIN = 0x11;//从ard-acti 按Back键 退到 Main-acti
 
     private int currentEvent;
     private Object data;

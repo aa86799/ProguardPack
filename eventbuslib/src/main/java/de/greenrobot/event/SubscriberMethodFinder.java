@@ -38,12 +38,12 @@ class SubscriberMethodFinder {
     private static final int SYNTHETIC = 0x1000;
 
     private static final int MODIFIERS_IGNORE = Modifier.ABSTRACT | Modifier.STATIC | BRIDGE | SYNTHETIC;
-    private static final Map<String, List<SubscriberMethod>> methodCache = new HashMap<String, List<SubscriberMethod>>();
+    private static final Map<String, List<SubscriberMethod>> methodCache = new HashMap<>();
 
     private final Map<Class<?>, Class<?>> skipMethodVerificationForClasses;
 
     SubscriberMethodFinder(List<Class<?>> skipMethodVerificationForClassesList) {
-        skipMethodVerificationForClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+        skipMethodVerificationForClasses = new ConcurrentHashMap<>();
         if (skipMethodVerificationForClassesList != null) {
             for (Class<?> clazz : skipMethodVerificationForClassesList) {
                 skipMethodVerificationForClasses.put(clazz, clazz);
@@ -60,9 +60,9 @@ class SubscriberMethodFinder {
         if (subscriberMethods != null) {
             return subscriberMethods;
         }
-        subscriberMethods = new ArrayList<SubscriberMethod>();
+        subscriberMethods = new ArrayList<>();
         Class<?> clazz = subscriberClass;
-        HashSet<String> eventTypesFound = new HashSet<String>();
+        HashSet<String> eventTypesFound = new HashSet<>();
         StringBuilder methodKeyBuilder = new StringBuilder();
         while (clazz != null) {
             String name = clazz.getName();
@@ -83,13 +83,13 @@ class SubscriberMethodFinder {
                             String modifierString = methodName.substring(ON_EVENT_METHOD_NAME.length());
                             ThreadMode threadMode;
                             if (modifierString.length() == 0) {
-                                threadMode = ThreadMode.PostThread;
+                                threadMode = ThreadMode.POST_THREAD;
                             } else if (modifierString.equals("MainThread")) {
-                                threadMode = ThreadMode.MainThread;
+                                threadMode = ThreadMode.MAIN_THREAD;
                             } else if (modifierString.equals("BackgroundThread")) {
-                                threadMode = ThreadMode.BackgroundThread;
+                                threadMode = ThreadMode.BACKGROUND_THREAD;
                             } else if (modifierString.equals("Async")) {
-                                threadMode = ThreadMode.Async;
+                                threadMode = ThreadMode.ASYNC;
                             } else {
                                 if (skipMethodVerificationForClasses.containsKey(clazz)) {
                                     continue;

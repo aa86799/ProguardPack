@@ -45,7 +45,7 @@ public class EventBus {
     static volatile EventBus defaultInstance;
 
     private static final EventBusBuilder DEFAULT_BUILDER = new EventBusBuilder();
-    private static final Map<Class<?>, List<Class<?>>> eventTypesCache = new HashMap<Class<?>, List<Class<?>>>();
+    private static final Map<Class<?>, List<Class<?>>> eventTypesCache = new HashMap<>();
 
     private final Map<Class<?>, CopyOnWriteArrayList<Subscription>> subscriptionsByEventType;
     private final Map<Object, List<Class<?>>> typesBySubscriber;
@@ -72,6 +72,31 @@ public class EventBus {
     private final boolean sendNoSubscriberEvent;
     private final boolean eventInheritance;
 
+    /**
+     * Creates a new EventBus instance; each instance is a separate scope in which events are delivered. To use a
+     * central bus, consider {@link #getDefault()}.
+     */
+    public EventBus() {
+        this(DEFAULT_BUILDER);
+    }
+
+    EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<>();
+        typesBySubscriber = new HashMap<>();
+        stickyEvents = new ConcurrentHashMap<>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    }
+
     /** Convenience singleton for apps using a process-wide EventBus instance. */
     public static EventBus getDefault() {
         if (defaultInstance == null) {
@@ -93,32 +118,6 @@ public class EventBus {
         SubscriberMethodFinder.clearCaches();
         eventTypesCache.clear();
     }
-
-    /**
-     * Creates a new EventBus instance; each instance is a separate scope in which events are delivered. To use a
-     * central bus, consider {@link #getDefault()}.
-     */
-    public EventBus() {
-        this(DEFAULT_BUILDER);
-    }
-
-    EventBus(EventBusBuilder builder) {
-        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
-        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
-        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
-        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
-        backgroundPoster = new BackgroundPoster(this);
-        asyncPoster = new AsyncPoster(this);
-        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
-        logSubscriberExceptions = builder.logSubscriberExceptions;
-        logNoSubscriberMessages = builder.logNoSubscriberMessages;
-        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
-        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
-        throwSubscriberException = builder.throwSubscriberException;
-        eventInheritance = builder.eventInheritance;
-        executorService = builder.executorService;
-    }
-
 
     /**
      * Registers the given subscriber to receive events. Subscribers must call {@link #unregister(Object)} once they
@@ -173,7 +172,7 @@ public class EventBus {
         CopyOnWriteArrayList<Subscription> subscriptions = subscriptionsByEventType.get(eventType);
         Subscription newSubscription = new Subscription(subscriber, subscriberMethod, priority);
         if (subscriptions == null) {
-            subscriptions = new CopyOnWriteArrayList<Subscription>();
+            subscriptions = new CopyOnWriteArrayList<>();
             subscriptionsByEventType.put(eventType, subscriptions);
         } else {
             if (subscriptions.contains(newSubscription)) {
@@ -195,7 +194,7 @@ public class EventBus {
 
         List<Class<?>> subscribedEvents = typesBySubscriber.get(subscriber);
         if (subscribedEvents == null) {
-            subscribedEvents = new ArrayList<Class<?>>();
+            subscribedEvents = new ArrayList<>();
             typesBySubscriber.put(subscriber, subscribedEvents);
         }
         subscribedEvents.add(eventType);
@@ -291,7 +290,7 @@ public class EventBus {
      * subscribers
      * won't receive the event. Events are usually canceled by higher priority subscribers (see
      * {@link #register(Object, int)}). Canceling is restricted to event handling methods running in posting thread
-     * {@link ThreadMode#PostThread}.
+     * {@link ThreadMode#POST_THREAD}.
      */
     public void cancelEventDelivery(Object event) {
         PostingThreadState postingState = currentPostingThreadState.get();
@@ -302,7 +301,7 @@ public class EventBus {
             throw new EventBusException("Event may not be null");
         } else if (postingState.event != event) {
             throw new EventBusException("Only the currently handled event may be aborted");
-        } else if (postingState.subscription.subscriberMethod.threadMode != ThreadMode.PostThread) {
+        } else if (postingState.subscription.subscriberMethod.threadMode != ThreadMode.POST_THREAD) {
             throw new EventBusException(" event handlers may only abort the incoming event");
         }
 
@@ -442,24 +441,24 @@ public class EventBus {
 
     private void postToSubscription(Subscription subscription, Object event, boolean isMainThread) {
         switch (subscription.subscriberMethod.threadMode) {
-            case PostThread:
+            case POST_THREAD:
                 invokeSubscriber(subscription, event);
                 break;
-            case MainThread:
+            case MAIN_THREAD:
                 if (isMainThread) {
                     invokeSubscriber(subscription, event);
                 } else {
                     mainThreadPoster.enqueue(subscription, event);
                 }
                 break;
-            case BackgroundThread:
+            case BACKGROUND_THREAD:
                 if (isMainThread) {
                     backgroundPoster.enqueue(subscription, event);
                 } else {
                     invokeSubscriber(subscription, event);
                 }
                 break;
-            case Async:
+            case ASYNC:
                 asyncPoster.enqueue(subscription, event);
                 break;
             default:
@@ -472,7 +471,7 @@ public class EventBus {
         synchronized (eventTypesCache) {
             List<Class<?>> eventTypes = eventTypesCache.get(eventClass);
             if (eventTypes == null) {
-                eventTypes = new ArrayList<Class<?>>();
+                eventTypes = new ArrayList<>();
                 Class<?> clazz = eventClass;
                 while (clazz != null) {
                     eventTypes.add(clazz);
@@ -548,7 +547,7 @@ public class EventBus {
 
     /** For ThreadLocal, much faster to set (and get multiple values). */
     final static class PostingThreadState {
-        final List<Object> eventQueue = new ArrayList<Object>();
+        final List<Object> eventQueue = new ArrayList<>();
         boolean isPosting;
         boolean isMainThread;
         Subscription subscription;
