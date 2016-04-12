@@ -16,9 +16,9 @@
 package de.greenrobot.event;
 
 final class Subscription {
-    final Object subscriber;
-    final SubscriberMethod subscriberMethod;
-    final int priority;
+    protected final Object subscriber;
+    protected final SubscriberMethod subscriberMethod;
+    protected final int priority;
     /**
      * Becomes false as soon as {@link de.greenrobot.event.EventBus#unregister(Object)} is called, which is checked by queued event delivery
      * {@link de.greenrobot.event.EventBus#invokeSubscriber(de.greenrobot.event.PendingPost)} to prevent race conditions.
