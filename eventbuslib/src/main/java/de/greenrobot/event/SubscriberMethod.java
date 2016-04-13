@@ -18,11 +18,11 @@ package de.greenrobot.event;
 import java.lang.reflect.Method;
 
 final class SubscriberMethod {
-    final Method method;
-    final ThreadMode threadMode;
-    final Class<?> eventType;
+    protected final Method method;
+    protected final ThreadMode threadMode;
+    protected final Class<?> eventType;
     /** Used for efficient comparison */
-    String methodString;
+    protected String methodString;
 
     SubscriberMethod(Method method, ThreadMode threadMode, Class<?> eventType) {
         this.method = method;

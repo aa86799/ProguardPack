@@ -42,7 +42,7 @@ public class EventBus {
     /** Log tag, apps may override it. */
     public static String TAG = "Event";
 
-    static volatile EventBus defaultInstance;
+    protected static volatile EventBus defaultInstance;
 
     private static final EventBusBuilder DEFAULT_BUILDER = new EventBusBuilder();
     private static final Map<Class<?>, List<Class<?>>> eventTypesCache = new HashMap<>();
@@ -547,12 +547,12 @@ public class EventBus {
 
     /** For ThreadLocal, much faster to set (and get multiple values). */
     final static class PostingThreadState {
-        final List<Object> eventQueue = new ArrayList<>();
-        boolean isPosting;
-        boolean isMainThread;
-        Subscription subscription;
-        Object event;
-        boolean canceled;
+        private final List<Object> eventQueue = new ArrayList<>();
+        private boolean isPosting;
+        private boolean isMainThread;
+        private Subscription subscription;
+        private Object event;
+        private boolean canceled;
     }
 
     ExecutorService getExecutorService() {

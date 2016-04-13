@@ -27,14 +27,14 @@ import java.util.concurrent.Executors;
 public class EventBusBuilder {
     private final static ExecutorService DEFAULT_EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
-    boolean logSubscriberExceptions = true;
-    boolean logNoSubscriberMessages = true;
-    boolean sendSubscriberExceptionEvent = true;
-    boolean sendNoSubscriberEvent = true;
-    boolean throwSubscriberException;
-    boolean eventInheritance = true;
-    ExecutorService executorService = DEFAULT_EXECUTOR_SERVICE;
-    List<Class<?>> skipMethodVerificationForClasses;
+    protected boolean logSubscriberExceptions = true;
+    protected boolean logNoSubscriberMessages = true;
+    protected boolean sendSubscriberExceptionEvent = true;
+    protected boolean sendNoSubscriberEvent = true;
+    protected boolean throwSubscriberException;
+    protected boolean eventInheritance = true;
+    protected ExecutorService executorService = DEFAULT_EXECUTOR_SERVICE;
+    protected List<Class<?>> skipMethodVerificationForClasses;
 
     EventBusBuilder() {
     }
