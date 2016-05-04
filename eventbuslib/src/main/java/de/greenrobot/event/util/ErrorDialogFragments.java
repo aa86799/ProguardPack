@@ -12,12 +12,14 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import de.greenrobot.event.EventBus;
 
-public class ErrorDialogFragments {
+public final class ErrorDialogFragments {
     /** TODO Use config:  Icon res ID to use for all error dialogs. May be configured by each app (optional). */
     public static int ERROR_DIALOG_ICON = 0;
 
     /** TODO Use config:  Event class to be fired on dismissing the dialog by the user. May be configured by each app. */
     public static Class<?> EVENT_TYPE_ON_CLICK;
+
+    private ErrorDialogFragments () {}
 
     public static Dialog createDialog(Context context, Bundle arguments, OnClickListener onClickListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
