@@ -34,6 +34,10 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="card"
             android:theme="@style/FullscreenTheme" />
+
+        <meta-data
+            android:name="test_place"
+            android:value="${test_place_holder}" />
     </application>
 
 </manifest>

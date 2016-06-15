@@ -6,8 +6,17 @@ gradle支持groovy语言，groovy默认引入的包有：
   java.io.* java.lang.* java.math.BigDecimal java.math.BigInteger
   java.net.* java.util.* groovy.lang.* groovy.util.*
  */
-def String computeVersionName() {
-    return "MyApplication-2.2"
+
+def appName() {
+    return "ProguardPack";
+}
+
+def String vname() {
+    return "1.1";
+}
+
+def buildTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"));
 }
 
 /*
@@ -57,18 +66,16 @@ android {
         //versionCode 是一个int值，区间为[0,99999] 一般用于判断app升级
         versionCode 1
         //versionName 是一个字符串，可以展示给用户
-        versionName computeVersionName() //使用外部定义的方法
+        versionName vname() //使用外部定义的方法
         /*
         manifestPlaceholders 
         	manifest中使用占位符，如：<... android:name="${YOUR_APP_KEY}" >
         	以[key-value]形式替换：[YOUR_APP_KEY:"value"]
         */
-        manifestPlaceholders = [YOUR_APP_KEY: "友盟后台的appkey"]
-
-
+        manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey"]
 
     }
-    defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "友盟后台的appkey-hoho"]
+    defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey-hoho"]  //reset
 
     signingConfigs { //gradle assembleRelease
         /*
@@ -89,8 +96,8 @@ android {
             可以配置多个buildType项，如下面的release，debug，aabbcc
          */
         release {
-            applicationIdSuffix ".release"
-            versionNameSuffix ".正式版"
+            applicationIdSuffix "release"  //add suffix.  <manifest><package="xx.xx.release" >
+            versionNameSuffix "_stone"
             minifyEnabled true  //译：使变小enabled。   即启用混淆器
             //混淆文件：sdk/tools/proguard/proguard-android.txt 和 当前module下的proguard-rules.pro
 //            proguardFiles  getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'
@@ -98,15 +105,28 @@ android {
             //getDefaultProguardFile('proguard-android-optimize.txt'),
             signingConfig signingConfigs.myConfig
             zipAlignEnabled true    //混淆后的zip优化，默认为true，可不写。当不显示配置为true时，不会生成unaligned.apk
+
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    if (output.outputFile != null && output.outputFile.name.endsWith('.apk')
+                            &&'release'.equals(variant.buildType.name)) {
+                        def apkFile = new File(
+                                output.outputFile.getParent(),
+                                "${appName()}_v${variant.versionName}_${variant.flavorName}_${buildTime()}.apk")
+                        output.outputFile = apkFile
+                    }
+                }
+            }
         }
-        debug {
+        debug {//测试发现新版的Gradle不能有多个debuggable 的配置
             debuggable true  //启用debug的buildType配置
             applicationIdSuffix ".debug"
         }
 
-        aabbcc {//自定义配置，未配置签名项，所以会生成未签名apk
+        aabbcc {
             multiDexEnabled true
             applicationIdSuffix ".aabbcc"
+            signingConfig signingConfigs.myConfig
         }
     }
     productFlavors {
@@ -131,6 +151,7 @@ android {
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.pro"
             manifestPlaceholders = [channelID: "百度应用平台"]
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg"]
 
             testApplicationId "com.stone.myapplication.test"
             testInstrumentationRunner "android.test.InstrumentationTestRunner"
@@ -140,8 +161,23 @@ android {
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.free"
             manifestPlaceholders = [channelID: "豌豆夹"]
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg"]
         }
     }
+
+
+    //concise productFlavors config
+//    productFlavors {
+//        google{}
+//        face{}
+//    }
+//
+//    productFlavors.all {
+//        flavor ->
+//            //name {google or face}
+//            flavor.manifestPlaceholders = [channelID:name, test_place_holder:"key_abcdefg"]
+//
+//    }
 
 }
 repositories.flatDir {
