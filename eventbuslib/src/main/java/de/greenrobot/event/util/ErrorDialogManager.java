@@ -26,7 +26,9 @@ import de.greenrobot.event.EventBus;
  * 
  * @author Markus
  */
-public class ErrorDialogManager {
+public final class ErrorDialogManager {
+
+    private ErrorDialogManager() {}
 
     public static class SupportManagerFragment extends Fragment {
         protected boolean finishAfterDialog;

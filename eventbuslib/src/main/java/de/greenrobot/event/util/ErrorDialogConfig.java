@@ -5,16 +5,16 @@ import android.util.Log;
 import de.greenrobot.event.EventBus;
 
 public class ErrorDialogConfig {
-    final Resources resources;
-    final int defaultTitleId;
-    final int defaultErrorMsgId;
-    final ExceptionToResourceMapping mapping;
+    protected final Resources resources;
+    protected final int defaultTitleId;
+    private final int defaultErrorMsgId;
+    protected final ExceptionToResourceMapping mapping;
 
-    EventBus eventBus;
-    boolean logExceptions = true;
-    String tagForLoggingExceptions;
-    int defaultDialogIconId;
-    Class<?> defaultEventTypeOnDialogClosed;
+    protected EventBus eventBus;
+    protected boolean logExceptions = true;
+    protected String tagForLoggingExceptions;
+    protected int defaultDialogIconId;
+    protected Class<?> defaultEventTypeOnDialogClosed;
 
     public ErrorDialogConfig(Resources resources, int defaultTitleId, int defaultMsgId) {
         this.resources = resources;
