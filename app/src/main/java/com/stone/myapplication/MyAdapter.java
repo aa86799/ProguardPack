@@ -28,10 +28,8 @@ public class MyAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder = null;
         if (convertView == null) {
             convertView = View.inflate(null, R.layout.my_text_view, null);
-            holder = new ViewHolder(convertView);
         }
         return convertView;
     }

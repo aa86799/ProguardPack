@@ -48,8 +48,6 @@ public class MainActivity extends ActionBarActivity {
         say();
         Log.i("aa", "bb");
         new MyException("","kk");
-        Tim t = Enum.valueOf(Tim.class, "AB");
-        Tim[] tims = Tim.values();
         Tim.valueOf("AC");
 
         PackageManager pm = getPackageManager();
