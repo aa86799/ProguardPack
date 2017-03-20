@@ -3,20 +3,32 @@ apply plugin: 'com.android.application'
 定义一个方法，仅def声明时，返回类型任意(自动判断)
    可以将返回值直接写成String 或def String
 gradle支持groovy语言，groovy默认引入的包有：
-  java.io.* java.lang.* java.math.BigDecimal java.math.BigInteger
-  java.net.* java.util.* groovy.lang.* groovy.util.*
+  java.io.*;
+  java.lang.*;
+  java.math.BigDecimal;
+  java.math.BigInteger;
+  java.net.*;
+  java.util.*;
+  groovy.lang.*;
+  groovy.util.*;
  */
 
 def appName() {
     return "ProguardPack";
 }
 
-def String vname() {
+def String vName() {
     return "1.1";
 }
 
 def buildTime() {
     return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"));
+}
+
+//获取项目最新一次git commit的SHA值,记得要把git要作为环境变量
+//def gitSha = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim() //git-v2.12 not support
+def gitSha () {//git-v2.12 support
+    'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
 }
 
 /*
@@ -39,8 +51,12 @@ Build Tasks:
 android {
 //    compileSdkVersion 22
 //    buildToolsVersion "22.0.1"
-    compileSdkVersion rootProject.ext.compileSdkVersion  //使用project>build.gradle定义的公共项
+    compileSdkVersion rootProject.ext.compileSdkVersion  //使用project>build.gradle#ext
     buildToolsVersion rootProject.ext.buildToolsVersion
+
+    lintOptions {
+        abortOnError false  //lint 错误是否要中断运行
+    }
 
     sourceSets {
         main {
@@ -66,13 +82,15 @@ android {
         //versionCode 是一个int值，区间为[0,99999] 一般用于判断app升级
         versionCode 1
         //versionName 是一个字符串，可以展示给用户
-        versionName vname() //使用外部定义的方法
+        versionName vName() //使用外部定义的方法
         /*
         manifestPlaceholders 
         	manifest中使用占位符，如：<... android:name="${YOUR_APP_KEY}" >
         	以[key-value]形式替换：[YOUR_APP_KEY:"value"]
         */
         manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey"]
+        // Enabling multidex support.  method count > 65536    可能还需要其他的操作，现在的新版可能不用(自行试验)
+        multiDexEnabled true
 
     }
     defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey-hoho"]  //reset
@@ -97,7 +115,7 @@ android {
          */
         release {
             applicationIdSuffix "release"  //add suffix.  <manifest><package="xx.xx.release" >
-            versionNameSuffix "_stone"
+            versionNameSuffix "_stone" //版本号添加后缀
             minifyEnabled true  //译：使变小enabled。   即启用混淆器
             //混淆文件：sdk/tools/proguard/proguard-android.txt 和 当前module下的proguard-rules.pro
 //            proguardFiles  getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'
@@ -112,7 +130,7 @@ android {
                             &&'release'.equals(variant.buildType.name)) {
                         def apkFile = new File(
                                 output.outputFile.getParent(),
-                                "${appName()}_v${variant.versionName}_${variant.flavorName}_${buildTime()}.apk")
+                                "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha}_${buildTime()}.apk")
                         output.outputFile = apkFile
                     }
                 }
@@ -150,8 +168,11 @@ android {
         flavor1 {
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.pro"
-            manifestPlaceholders = [channelID: "百度应用平台"]
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg"]
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
+                                    channelID: "百度应用平台",
+                                    test_place_holder: "Stone1"
+            ]
+
 
             testApplicationId "com.stone.myapplication.test"
             testInstrumentationRunner "android.test.InstrumentationTestRunner"
@@ -160,8 +181,10 @@ android {
         flavor2 {
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.free"
-            manifestPlaceholders = [channelID: "豌豆夹"]
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg"]
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
+                                    channelID: "豌豆夹",
+                                    test_place_holder: "Stone2"
+            ]
         }
     }
 
@@ -175,34 +198,33 @@ android {
 //    productFlavors.all {
 //        flavor ->
 //            //name {google or face}
-//            flavor.manifestPlaceholders = [channelID:name, test_place_holder:"key_abcdefg"]
+//            flavor.manifestPlaceholders = [channelID:name, test_place_holder:"stone"]
 //
 //    }
 
 }
-repositories.flatDir {
+repositories.flatDir { //used for add arr file
     dirs 'libs'
 }
 dependencies {
     //	Local binary dependency  本地jar包
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     //Gradle每次编译都会去检查库的更新，使用本地编译生成的库  android-lib项目生成的库文件为.arr文件
-    compile(name:'eventbuslib-release', ext:'aar')
+    compile(name: 'eventbuslib-release', ext: 'aar')
+    //  libs/eventbuslib-release.aar
     // Module dependency 引用android-library项目
-//    compile project(':eventbuslib')
+    //    compile project(':eventbuslib')
     /*
-      Remote binary dependency  download to local   group:name:version 
-      配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
-     */
+          Remote binary dependency  download to local   group:name:version
+          配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
+         */
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile 'com.android.support:support-v4:22.0.0'
     compile 'com.android.support:cardview-v7:22.0.0'
     compile 'com.android.support:recyclerview-v7:22.0.0'
-
     //指定某产品，编译依赖的android-library 及 buildType
     /*
-        flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
-        flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
-    */
-
+            flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
+            flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
+        */
 }
