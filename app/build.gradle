@@ -227,4 +227,5 @@ dependencies {
             flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
             flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
         */
+    compile 'com.android.support:multidex:1.0.1' //multidex
 }
