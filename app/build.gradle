@@ -22,7 +22,8 @@ def String vName() {
 }
 
 def buildTime() {
-    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"));
+//    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"));
+    return new Date().format('MMdd', TimeZone.getTimeZone('GMT+08:00'))
 }
 
 //获取项目最新一次git commit的SHA值,记得要把git要作为环境变量
