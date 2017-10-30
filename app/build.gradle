@@ -14,7 +14,7 @@ gradle支持groovy语言，groovy默认引入的包有：
  */
 
 def appName() {
-    return "ProguardPack";
+    return "ProguardPack"
 }
 
 def String vName() {
@@ -78,8 +78,8 @@ android {
 
     defaultConfig {
         applicationId "com.stone.myapplication"
-        minSdkVersion 8
-        targetSdkVersion 22
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         //versionCode 是一个int值，区间为[0,99999] 一般用于判断app升级
         versionCode 1
         //versionName 是一个字符串，可以展示给用户
@@ -92,6 +92,9 @@ android {
         manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey"]
         // Enabling multidex support.  method count > 65536    可能还需要其他的操作，现在的新版可能不用(自行试验)
         multiDexEnabled true
+
+        //AS3.0  新增
+        flavorDimensions "debug", "release"//, "aabbcc"
 
     }
     defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey-hoho"]  //reset
@@ -125,32 +128,34 @@ android {
             signingConfig signingConfigs.myConfig
             zipAlignEnabled true    //混淆后的zip优化，默认为true，可不写。当不显示配置为true时，不会生成unaligned.apk
 
-            applicationVariants.all { variant ->
+           /* applicationVariants.all { variant ->
                 variant.outputs.each { output ->
                     if (output.outputFile != null && output.outputFile.name.endsWith('.apk')
                             &&'release'.equals(variant.buildType.name)) {
                         def apkFile = new File(
                                 output.outputFile.getParent(),
                                 "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha}_${buildTime()}.apk")
-                        output.outputFile = apkFile
+                        //outputFile 在AS3.0后，无法再set 一个目录了，其只有get方法
+//                        output.outputFile = apkFile
+
                     }
                 }
-            }
+            }*/
         }
         debug {//测试发现新版的Gradle不能有多个debuggable 的配置
             debuggable true  //启用debug的buildType配置
             applicationIdSuffix ".debug"
         }
 
-        aabbcc {
-            multiDexEnabled true
-            applicationIdSuffix ".aabbcc"
-            signingConfig signingConfigs.myConfig
-        }
+//        aabbcc {
+//            multiDexEnabled true
+//            applicationIdSuffix ".aabbcc"
+//            signingConfig signingConfigs.myConfig
+//        }
     }
     productFlavors {
         /*
-          productFlavors-产品风格：
+          productFlavors-产品风格：(AS Gradle 3.0以前)
           		即不同产品的配置，它会基于上面的公共配置项defaultConfig
           		下面的配置项与buildTypes{}中的配置项，成类似sql中的全联(full join)关系
           		 当执行 $gradle build   命令后，会生成：
@@ -164,9 +169,9 @@ android {
           applicationId 用于标识 在谷歌Play商店上的唯一标识 默认不配置，则与app的AndroidManifest.xml中的package一致
           		仅替换<manifest>中的package属性值，其它不受影响
 
-         */
-
-        flavor1 {
+      flavor1 {
+            //AS3.0  新增, 只能配置一个 dimension(维度)
+            dimension "debug"
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.pro"
             manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
@@ -180,12 +185,52 @@ android {
         }
 
         flavor2 {
+            //AS3.0  新增，  只能配置一个 dimension(维度)
+            dimension "release"
             proguardFiles 'proguard-rules.pro'
             applicationId "com.stone.myapplication.free"
             manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
                                     channelID: "豌豆夹",
                                     test_place_holder: "Stone2"
             ]
+        }
+
+        flavor3 {
+            //AS3.0  新增，  只能配置一个 dimension(维度)
+            dimension "aabbcc"
+            proguardFiles 'proguard-rules.pro'
+            applicationId "com.stone.myapplication.free"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
+                                    channelID: "豌豆夹",
+                                    test_place_holder: "Stone2"
+            ]
+        }
+        */
+
+        /*
+        AS Gradle 3.0:   build variant ==> demoFullDebug  ==> app-demo-full-release/debug.apk
+            以前是会生成4个apk的，现在只有两个了。所以这里的 flavors 的配置就不能像以前一样是能各自独立的配置了，
+            必须要配置成互补的配置才可以。
+            如果还想像以前一样有独立的配置，只能手动注释掉一些flavors了...
+
+         */
+
+        demo {
+            dimension "debug"
+            proguardFiles 'app/proguard-rules.pro'
+            applicationId "com.stone.myapplication.pro"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
+                                    channelID: "百度应用平台A",
+                                    test_place_holder: "Stone1"]
+        }
+
+        full {
+            dimension "release"
+            proguardFiles 'app/proguard-rules.pro'
+            applicationId "com.stone.myapplication.free"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
+                                    channelID: "豌豆夹",
+                                    test_place_holder: "Stone2"]
         }
     }
 
@@ -203,30 +248,31 @@ android {
 //
 //    }
 
+    buildToolsVersion '26.0.2'
 }
 repositories.flatDir { //used for add arr file
     dirs 'libs'
 }
 dependencies {
     //	Local binary dependency  本地jar包
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    //Gradle每次编译都会去检查库的更新，使用本地编译生成的库  android-lib项目生成的库文件为.arr文件
-    compile(name: 'eventbuslib-release', ext: 'aar')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //Gradle每次编译都会去检查库的更新，使用本地编译生成的库；生成的库文件为 <project-path>/eventbuslib/build/outputs/aar 下的 .arr文件
+    implementation(name: 'eventbuslib-release', ext: 'aar')
     //  libs/eventbuslib-release.aar
     // Module dependency 引用android-library项目
     //    compile project(':eventbuslib')
     /*
-          Remote binary dependency  download to local   group:name:version
-          配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
-         */
-    compile 'com.android.support:appcompat-v7:22.0.0'
-    compile 'com.android.support:support-v4:22.0.0'
-    compile 'com.android.support:cardview-v7:22.0.0'
-    compile 'com.android.support:recyclerview-v7:22.0.0'
+              Remote binary dependency  download to local   group:name:version
+              配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
+             */
+    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportVersion"
+    implementation "com.android.support:support-v4:$rootProject.ext.supportVersion"
+    implementation "com.android.support:cardview-v7:$rootProject.ext.supportVersion"
+    implementation "com.android.support:recyclerview-v7:$rootProject.ext.supportVersion"
     //指定某产品，编译依赖的android-library 及 buildType
     /*
-            flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
-            flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
-        */
-    compile 'com.android.support:multidex:1.0.1' //multidex
+                flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
+                flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
+            */
+    implementation 'com.android.support:multidex:1.0.2' //multidex
 }

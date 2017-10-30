@@ -1,5 +1,5 @@
 <resources>
-    <style name="AppTheme" parent="Base.V11.Theme.AppCompat">
+    <style name="AppTheme" parent="Base.Theme.AppCompat">
         <!-- Customize your theme here. -->
     </style>
 
