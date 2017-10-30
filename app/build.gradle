@@ -18,7 +18,7 @@ def appName() {
 }
 
 def String vName() {
-    return "1.1";
+    return "1.1"
 }
 
 def buildTime() {
@@ -28,7 +28,7 @@ def buildTime() {
 
 //获取项目最新一次git commit的SHA值,记得要把git要作为环境变量
 //def gitSha = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim() //git-v2.12 not support
-def gitSha () {//git-v2.12 support
+def gitSha() {//git-v2.12 support
     'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
 }
 
@@ -122,26 +122,37 @@ android {
             versionNameSuffix "_stone" //版本号添加后缀
             minifyEnabled true  //译：使变小enabled。   即启用混淆器
             //混淆文件：sdk/tools/proguard/proguard-android.txt 和 当前module下的proguard-rules.pro
-//            proguardFiles  getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'
+            proguardFiles  getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'
             //getDefaultProguardFile('proguard-android.txt'),
             //getDefaultProguardFile('proguard-android-optimize.txt'),
             signingConfig signingConfigs.myConfig
             zipAlignEnabled true    //混淆后的zip优化，默认为true，可不写。当不显示配置为true时，不会生成unaligned.apk
 
-           /* applicationVariants.all { variant ->
+            applicationVariants.all { variant ->
                 variant.outputs.each { output ->
                     if (output.outputFile != null && output.outputFile.name.endsWith('.apk')
                             &&'release'.equals(variant.buildType.name)) {
-                        def apkFile = new File(
-                                output.outputFile.getParent(),
-                                "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha}_${buildTime()}.apk")
-                        //outputFile 在AS3.0后，无法再set 一个目录了，其只有get方法
+                        //outputFile 在AS3.0后，没有set方法了，其只有get方法
+//                        def apkFile = new File(
+//                                output.outputFile.getParent(),
+//                                "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha()}_${buildTime()}.apk")
 //                        output.outputFile = apkFile
 
+                        /*
+                        如下结果：当执行gradle sync时(即点击操作栏上的gradle同步按钮)时，
+                        且在输出目录有apk情况下，会复制并重命名apk文件
+                         */
+                        def dir = output.outputFile.getParent()
+                        def outDir = "stone/apk"
+                        def srcOutPath = output.outputFile.getAbsolutePath()
+                        def srcName = srcOutPath.substring(srcOutPath.lastIndexOf(File.separator) + 1)
+                        def outName = "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha()}_${buildTime()}.apk"
+                        buildApkTask(dir, outDir, srcName, outName)
                     }
                 }
-            }*/
+            }
         }
+
         debug {//测试发现新版的Gradle不能有多个debuggable 的配置
             debuggable true  //启用debug的buildType配置
             applicationIdSuffix ".debug"
@@ -214,10 +225,8 @@ android {
             如果还想像以前一样有独立的配置，只能手动注释掉一些flavors了...
 
          */
-
         demo {
             dimension "debug"
-            proguardFiles 'app/proguard-rules.pro'
             applicationId "com.stone.myapplication.pro"
             manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
                                     channelID: "百度应用平台A",
@@ -226,7 +235,6 @@ android {
 
         full {
             dimension "release"
-            proguardFiles 'app/proguard-rules.pro'
             applicationId "com.stone.myapplication.free"
             manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
                                     channelID: "豌豆夹",
@@ -248,31 +256,45 @@ android {
 //
 //    }
 
-    buildToolsVersion '26.0.2'
 }
 repositories.flatDir { //used for add arr file
     dirs 'libs'
 }
 dependencies {
     //	Local binary dependency  本地jar包
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    api fileTree(include: ['*.jar'], dir: 'libs')
     //Gradle每次编译都会去检查库的更新，使用本地编译生成的库；生成的库文件为 <project-path>/eventbuslib/build/outputs/aar 下的 .arr文件
-    implementation(name: 'eventbuslib-release', ext: 'aar')
-    //  libs/eventbuslib-release.aar
-    // Module dependency 引用android-library项目
-    //    compile project(':eventbuslib')
+    api(name: 'eventbuslib-release', ext: 'aar') //  libs/eventbuslib-release.aar
+    //    compile project(':eventbuslib') // Module dependency 引用android-library项目
     /*
-              Remote binary dependency  download to local   group:name:version
-              配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
-             */
-    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportVersion"
-    implementation "com.android.support:support-v4:$rootProject.ext.supportVersion"
-    implementation "com.android.support:cardview-v7:$rootProject.ext.supportVersion"
-    implementation "com.android.support:recyclerview-v7:$rootProject.ext.supportVersion"
+      Remote binary dependency  download to local   group:name:version
+      配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
+     */
+
+    api "com.android.support:appcompat-v7:$rootProject.ext.supportVersion"
+    api "com.android.support:support-v4:$rootProject.ext.supportVersion"
+    api "com.android.support:cardview-v7:$rootProject.ext.supportVersion"
+    api "com.android.support:recyclerview-v7:$rootProject.ext.supportVersion"
     //指定某产品，编译依赖的android-library 及 buildType
     /*
                 flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
                 flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
             */
-    implementation 'com.android.support:multidex:1.0.2' //multidex
+    api 'com.android.support:multidex:1.0.2' //multidex
+}
+
+def buildApkTask(inDirPath, outPath, srcName, outName) {
+    println("stone---stone")
+    println(inDirPath)
+    println(outPath)
+    println(srcName)
+    println(outName)
+    tasks.create(name:'copyApks', type:Copy) {
+        copy {
+            from(inDirPath)
+            into(outPath)
+            include(srcName)
+            rename(srcName, outName)
+        }
+    }
 }

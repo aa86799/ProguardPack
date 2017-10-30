@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     @java.lang.Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         User user = new User();
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    static enum Tim {
+    enum Tim {
 
         AB(3) {
             @Override

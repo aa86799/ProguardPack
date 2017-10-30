@@ -71,6 +71,14 @@
 #    public static <fields>;
 #}
 -dontwarn android.support.**
+-keep class android.support.** { *; }
+-keep class android.support.v4.** { *; }
+-keep public class * extends android.support.v4.**
+-keep interface android.support.v4.app.** { *; }
+-keep class android.support.v7.** { *; }
+-keep public class * extends android.support.v7.**
+-keep interface android.support.v7.app.** { *; }
+-dontwarn android.support.**    # 忽略警告
 
 #-flattenpackagehierarchy com.stone.myapplication.interfaces # 将包里的类混淆成n个再重新打包到一个个的package中
 #-repackageclasses com.stone.myapplication.interfaces #将包里的类混淆成n个再重新打包到一个统一的package中  会覆盖flattenpackagehierarchy选项
