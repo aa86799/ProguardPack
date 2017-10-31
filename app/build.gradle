@@ -59,20 +59,36 @@ android {
         abortOnError false  //lint 错误是否要中断运行
     }
 
+    dexOptions {//https://developer.android.google.cn/studio/run/index.html
+        maxProcessCount 4 // this is the default value
+        javaMaxHeapSize "1g"
+    }
+
     sourceSets {
         main {
             java {
-                srcDir 'src/java'
-            }
-            resources {
-                srcDir 'src/resources'
-            }
+                srcDir 'src/full/java'
+                //if comment up  ==>  default: src/main/java
+            } // <==> java.srcDirs = ['src/full/java']
+//            resources {
+//                srcDir ['src/full/res', 'src/main/res']
+//                //if comment up  ==>  default: src/main/res
+//            }
+            res.srcDirs = ['src/full/res', 'src/main/res']
+
+            manifest.srcFile 'src/full/AndroidManifest.xml' //只有一个选项值，可以不用 =[] 这样的组形式
         }
+
+
 //        main.jniLibs {//注意DSL中，property可以用圆点，method可以用 {}
 //            srcDir('libs')
 //        } //所以可以写成  main {jniLibs{srcDir()}} 或 main.jniLibs.srcDir()
 //        main.jniLibs.srcDir('libs')
         //若有多个目录  jniLibs.srcDirs=['libs', 'x86libs']
+
+        androidTest {
+            setRoot 'src/androidTest'
+        }
 
     }
 
@@ -93,8 +109,8 @@ android {
         // Enabling multidex support.  method count > 65536    可能还需要其他的操作，现在的新版可能不用(自行试验)
         multiDexEnabled true
 
-        //AS3.0  新增
-        flavorDimensions "debug", "release"//, "aabbcc"
+        //AS3.0  新增； 凡声明的 dimension 都必须被应用
+        flavorDimensions "DimenA", "DimenB"//, "aabbcc"
 
     }
     defaultConfig.manifestPlaceholders = [YOUR_APP_KEY: "后台的appkey-hoho"]  //reset
@@ -110,6 +126,47 @@ android {
             keyAlias "stone"
             keyPassword "482935"  //修改成自己的签名文件key密码
 //			keyPassword System.console().readLine("\nKey password: ") //使用命令行gradle build 编译
+        }
+    }
+
+    productFlavors {
+        /*s*/
+
+        /*
+        3.0 之前：flavors和buildTypes的子项 会多对多匹配；即会有 m x n 个build variant
+        3.0 之后：flavors中需要配置dimension， 其又声明在flavorDimensions里面；
+                匹配规则是：不同dimension的flavor会被联合，然后与buildTypes的每项匹配；
+                这里就会组合成：
+                    demoXxxDebug
+                    demoXxxRelease
+                    demoXxxStaging
+                    fullXxxDebug
+                    fullXxxRelease
+                    fullXxxStaging
+
+         */
+        demo {
+            dimension "DimenA"
+            applicationId "com.stone.myapplication.pro"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
+                                    channelID: "百度应用平台A",
+                                    test_place_holder: "Stone1"]
+        }
+
+        full {
+            dimension "DimenA"
+            applicationId "com.stone.myapplication.free"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
+                                    channelID: "豌豆夹",
+                                    test_place_holder: "Stone2"]
+        }
+
+        xxx {
+            dimension "DimenB"
+            applicationId "com.stone.myapplication.xxx"
+            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg3",
+                                    channelID: "豌豆夹",
+                                    test_place_holder: "Stone3"]
         }
     }
 
@@ -141,19 +198,26 @@ android {
                         /*
                         如下结果：当执行gradle sync时(即点击操作栏上的gradle同步按钮)时，
                         且在输出目录有apk情况下，会复制并重命名apk文件
+                        是因为3.0后，each() 要求对象是已存在的
                          */
-                        def dir = output.outputFile.getParent()
-                        def outDir = "stone/apk"
-                        def srcOutPath = output.outputFile.getAbsolutePath()
-                        def srcName = srcOutPath.substring(srcOutPath.lastIndexOf(File.separator) + 1)
-                        def outName = "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha()}_${buildTime()}.apk"
-                        buildApkTask(dir, outDir, srcName, outName)
+//                        def dir = output.outputFile.getParent()
+//                        def outDir = "stone/apk"
+//                        def srcOutPath = output.outputFile.getAbsolutePath()
+//                        def srcName = srcOutPath.substring(srcOutPath.lastIndexOf(File.separator) + 1)
+//                        def outName = "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha()}_${buildTime()}.apk"
+//                        buildApkTask(dir, outDir, srcName, outName)
+
                     }
                 }
+                //https://developer.android.google.cn/studio/build/gradle-plugin-3-0-0-migration.html#variant_aware
+                variant.outputs.all {
+                    outputFileName = "${appName()}_v${variant.versionName}_${variant.flavorName}_${gitSha()}_${buildTime()}.apk"
+                }
+
             }
         }
 
-        debug {//测试发现新版的Gradle不能有多个debuggable 的配置
+        debug {//测试发现新版的Gradle不能有多个ebuggable 的配置
             debuggable true  //启用debug的buildType配置
             applicationIdSuffix ".debug"
         }
@@ -163,85 +227,12 @@ android {
 //            applicationIdSuffix ".aabbcc"
 //            signingConfig signingConfigs.myConfig
 //        }
+
+        staging {
+            matchingFallbacks = ['debug', 'aa', 'release']//?
+        }
+
     }
-    productFlavors {
-        /*
-          productFlavors-产品风格：(AS Gradle 3.0以前)
-          		即不同产品的配置，它会基于上面的公共配置项defaultConfig
-          		下面的配置项与buildTypes{}中的配置项，成类似sql中的全联(full join)关系
-          		 当执行 $gradle build   命令后，会生成：
-          		 	module-flavor1-release-unaligned.apk
-          		 	module-flavor1-release.apk
-          		 	module-flavor1-debug-unaligned.apk
-          		 	module-flavor1-debug.apk
-          		 	module-flavor1-aabbcc.apk
-          		 	...flavor2...apk
-
-          applicationId 用于标识 在谷歌Play商店上的唯一标识 默认不配置，则与app的AndroidManifest.xml中的package一致
-          		仅替换<manifest>中的package属性值，其它不受影响
-
-      flavor1 {
-            //AS3.0  新增, 只能配置一个 dimension(维度)
-            dimension "debug"
-            proguardFiles 'proguard-rules.pro'
-            applicationId "com.stone.myapplication.pro"
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
-                                    channelID: "百度应用平台",
-                                    test_place_holder: "Stone1"
-            ]
-
-
-            testApplicationId "com.stone.myapplication.test"
-            testInstrumentationRunner "android.test.InstrumentationTestRunner"
-        }
-
-        flavor2 {
-            //AS3.0  新增，  只能配置一个 dimension(维度)
-            dimension "release"
-            proguardFiles 'proguard-rules.pro'
-            applicationId "com.stone.myapplication.free"
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
-                                    channelID: "豌豆夹",
-                                    test_place_holder: "Stone2"
-            ]
-        }
-
-        flavor3 {
-            //AS3.0  新增，  只能配置一个 dimension(维度)
-            dimension "aabbcc"
-            proguardFiles 'proguard-rules.pro'
-            applicationId "com.stone.myapplication.free"
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
-                                    channelID: "豌豆夹",
-                                    test_place_holder: "Stone2"
-            ]
-        }
-        */
-
-        /*
-        AS Gradle 3.0:   build variant ==> demoFullDebug  ==> app-demo-full-release/debug.apk
-            以前是会生成4个apk的，现在只有两个了。所以这里的 flavors 的配置就不能像以前一样是能各自独立的配置了，
-            必须要配置成互补的配置才可以。
-            如果还想像以前一样有独立的配置，只能手动注释掉一些flavors了...
-
-         */
-        demo {
-            dimension "debug"
-            applicationId "com.stone.myapplication.pro"
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg1",
-                                    channelID: "百度应用平台A",
-                                    test_place_holder: "Stone1"]
-        }
-
-        full {
-            dimension "release"
-            applicationId "com.stone.myapplication.free"
-            manifestPlaceholders = [YOUR_APP_KEY: "abcdefg2",
-                                    channelID: "豌豆夹",
-                                    test_place_holder: "Stone2"]
-        }
-    }
-
 
     //concise productFlavors config
 //    productFlavors {
@@ -289,7 +280,7 @@ def buildApkTask(inDirPath, outPath, srcName, outName) {
     println(outPath)
     println(srcName)
     println(outName)
-    tasks.create(name:'copyApks', type:Copy) {
+    tasks.create(name:'copyApk', type:Copy) {
         copy {
             from(inDirPath)
             into(outPath)

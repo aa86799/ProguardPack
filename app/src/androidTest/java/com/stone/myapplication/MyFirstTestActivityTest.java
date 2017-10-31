@@ -1,7 +1,6 @@
 package com.stone.myapplication;
 
 import android.test.ActivityInstrumentationTestCase2;
-import android.test.AndroidTestCase;
 import android.test.TouchUtils;
 import android.test.ViewAsserts;
 import android.test.suitebuilder.annotation.MediumTest;
@@ -18,13 +17,13 @@ import android.widget.RelativeLayout;
  *
  * Instrumentation 无界面的单元测试
  */
-public class MyFirstTestActivityTest extends ActivityInstrumentationTestCase2<MainActivity> {
+public class MyFirstTestActivityTest extends ActivityInstrumentationTestCase2<MainActivity2> {
 
-    private MainActivity mActivity;
+    private MainActivity2 mActivity;
     private Button mBtn;
 
     public MyFirstTestActivityTest() {
-        super(MainActivity.class);
+        super(MainActivity2.class);
     }
 
     @Override

@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivity2"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,6 +23,17 @@
                 android:name="channelName"
                 android:value="${channelID}" />
         </activity>
+
+        <activity
+            android:name="com.stone.myapplication.RecyclerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_recycler"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name="com.stone.myapplication.CardActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="card"
+            android:theme="@style/FullscreenTheme" />
 
         <meta-data
             android:name="test_place"
