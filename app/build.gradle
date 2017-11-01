@@ -253,25 +253,29 @@ repositories.flatDir { //used for add arr file
 }
 dependencies {
     //	Local binary dependency  本地jar包
-    api fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
+
     //Gradle每次编译都会去检查库的更新，使用本地编译生成的库；生成的库文件为 <project-path>/eventbuslib/build/outputs/aar 下的 .arr文件
-    api(name: 'eventbuslib-release', ext: 'aar') //  libs/eventbuslib-release.aar
+    implementation(name: 'eventbuslib-release', ext: 'aar') //  libs/eventbuslib-release.aar
     //    compile project(':eventbuslib') // Module dependency 引用android-library项目
     /*
       Remote binary dependency  download to local   group:name:version
       配置远程仓库中的jar包，打包时，检查本地有没有，若没有则下载到本地。
      */
 
-    api "com.android.support:appcompat-v7:$rootProject.ext.supportVersion"
-    api "com.android.support:support-v4:$rootProject.ext.supportVersion"
-    api "com.android.support:cardview-v7:$rootProject.ext.supportVersion"
-    api "com.android.support:recyclerview-v7:$rootProject.ext.supportVersion"
+    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportVersion"
+    implementation "com.android.support:support-v4:$rootProject.ext.supportVersion"
+    implementation "com.android.support:cardview-v7:$rootProject.ext.supportVersion"
+    implementation "com.android.support:recyclerview-v7:$rootProject.ext.supportVersion"
     //指定某产品，编译依赖的android-library 及 buildType
     /*
                 flavor1Compile project(path: ':lib1', configuration: 'flavor1Release')
                 flavor2Compile project(path: ':lib1', configuration: 'flavor2Release')
             */
-    api 'com.android.support:multidex:1.0.2' //multidex
+    implementation 'com.android.support:multidex:1.0.2' //multidex
+
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.11'
 }
 
 def buildApkTask(inDirPath, outPath, srcName, outName) {
